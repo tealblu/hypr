@@ -28,6 +28,8 @@ preload_wallpaper() {
 
     echo -en "$output_string" > $hp_conf
 
+    # output the wallpaper to be used in the parent shell
+    echo "$wallpaper"
 }
 
 reset_hyprpaper() {

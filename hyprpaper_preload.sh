@@ -8,7 +8,7 @@ preload_wallpaper() {
     hp_conf="$HOME/.config/hypr/hyprpaper.conf"
 
     # var
-    NOW=`date '+%F_%H:%M:%S'`
+    NOW=$(date '+%F_%H:%M:%S')
     output_string=""
 
     # build hyprpaper.conf
@@ -19,18 +19,25 @@ preload_wallpaper() {
 
     wallpapers=$(find "$wallpaper_dir" -type f | sort -R --random-source=/dev/urandom)
     for wallpaper in $wallpapers; do
-        preload_string="preload = "$wallpaper"\n"
-        wallpaper_string="wallpaper = $monitor, $wallpaper\n"
+        # Check if the file is an image
+        mimetype=$(file --mime-type -b "$wallpaper")
+        if [[ "$mimetype" == image/* ]]; then
+            # Use quotes to ensure special characters are handled
+            preload_string="preload = \"$wallpaper\"\n"
+            wallpaper_string="wallpaper = \"$monitor\", \"$wallpaper\"\n"
+            output_string+="$preload_string"
+            output_string+="$wallpaper_string"
+            break  # Optional: Load only the first valid image
+        fi
     done
 
-    output_string+="$preload_string"
-    output_string+="$wallpaper_string"
+    echo -en "$output_string" > "$hp_conf"
 
-    echo -en "$output_string" > $hp_conf
-
-    # output the wallpaper to be used in the parent shell
+    # Output the wallpaper to be used in the parent shell
     echo "$wallpaper"
 }
+
+
 
 reset_hyprpaper() {
     # Check if hyprpaper is running

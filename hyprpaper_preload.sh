@@ -23,11 +23,11 @@ preload_wallpaper() {
         mimetype=$(file --mime-type -b "$wallpaper")
         if [[ "$mimetype" == image/* ]]; then
             # Use quotes to ensure special characters are handled
-            preload_string="preload = \"$wallpaper\"\n"
-            wallpaper_string="wallpaper = \"$monitor\", \"$wallpaper\"\n"
-            output_string+="$preload_string"
-            output_string+="$wallpaper_string"
-            break  # Optional: Load only the first valid image
+            preload_string="preload = $wallpaper\n"
+            wallpaper_string="wallpaper = $monitor, $wallpaper\n"
+            output_string+=$preload_string
+            output_string+=$wallpaper_string
+            break  # Load only the first valid image
         fi
     done
 

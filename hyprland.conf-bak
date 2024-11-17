@@ -63,8 +63,6 @@ env = GDK_SCALE,1
 env = WLR_NO_HARDWARE_CURSORS,1
 cursor {
 	no_hardware_cursors = true
-    enable_hyprcursor = true
-    hide_on_key_press = false
 } 
 
 # unscale XWayland
@@ -93,7 +91,7 @@ input {
 # See https://wiki.hyprland.org/Configuring/Keywords/#executing
 
 device {
-    name = razer
+    name = epic mouse V1
     sensitivity = -0.5
 }
 
@@ -111,10 +109,8 @@ gestures {
 # See https://wiki.hyprland.org/Configuring/Dwindle-Layout/
 
 dwindle {
-    pseudotile = true
+    pseudotile = yes
     preserve_split = yes
-    smart_split = true
-    smart_resizing = true
 }
 
 # See https://wiki.hyprland.org/Configuring/Master-Layout/
@@ -131,16 +127,13 @@ master {
 
 misc {
     vrr = 0
-    disable_hyprland_logo = false
-    disable_splash_rendering = false
+    disable_hyprland_logo = true
+    disable_splash_rendering = true
     force_default_wallpaper = 0
-    vfr = true
-    mouse_move_focuses_monitor = true
 }
 
 xwayland {
     force_zero_scaling = true
-    enabled = true
 }
 
 plugin:dynamic-cursors {
@@ -268,14 +261,10 @@ plugin:dynamic-cursors {
 source = ~/.config/hypr/animations.conf
 source = ~/.config/hypr/keybindings.conf
 source = ~/.config/hypr/windowrules.conf
+source = ~/.config/hypr/themes/common.conf # shared theme settings
 source = ~/.config/hypr/themes/theme.conf # theme specific settings
 source = ~/.config/hypr/themes/colors.conf # wallbash color override
 source = ~/.config/hypr/monitors.conf # initially empty, to be configured by user and remains static
-source = ~/.config/hypr/themes/common.conf # shared theme settings
 source = ~/.config/hypr/userprefs.conf # initially empty, to be configured by user and remains static
 
 # Note: as userprefs.conf is sourced at the end, settings configured in this file will override the defaults
-
-render {
-    direct_scanout = true
-}

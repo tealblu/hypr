@@ -37,26 +37,20 @@ preload_wallpaper() {
     echo "$wallpaper"
 }
 
+generate_theme() {
+    wallpaper=$(preload_wallpaper)  # Get the wallpaper path from preload_wallpaper
 
+    echo "Killing existing hyprpaper..."
+    killall hyprpaper || true
+    
+    echo "Starting hyprpaper..."
+    hyprctl dispatch exec hyprpaper
 
-reset_hyprpaper() {
-    # Check if hyprpaper is running
-    if pgrep -x "hyprpaper" > /dev/null; then
-        killall hyprpaper
-        
-        # Wait a moment to ensure it has terminated
-        sleep 0.1
-    else
-        echo "Hyprpaper is not running."
-    fi
+    # Run wal to generate colors
+    wal -i "$wallpaper" || true
 
-    # Start a new instance of hyprpaper
-    hyprpaper &
-
-    # Notify success
-    echo "Hyprpaper has been restarted."
+    # (Optional) Restart any applications that depend on the theme
 }
 
-preload_wallpaper
-
-reset_hyprpaper
+#preload_wallpaper
+generate_theme

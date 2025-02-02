@@ -47,9 +47,14 @@ generate_theme() {
     hyprctl dispatch exec hyprpaper
 
     # Run wal to generate colors
-    wal -i "$wallpaper" || true
+    wal -i "$wallpaper" &
 
     # (Optional) Restart any applications that depend on the theme
+    echo "Restarting swaync..."
+    killall swaync
+
+    echo "Starting swaync..."
+    swaync
 }
 
 #preload_wallpaper

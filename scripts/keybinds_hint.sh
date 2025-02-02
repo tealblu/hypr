@@ -5,7 +5,7 @@
 #* Please inform us if there are new Categories upstream will try to add comments to this script
 #* Khing 🦆
 
-pkill -x rofi && exit
+pkill -x wofi && exit
 scrDir=$(dirname "$(realpath "$0")")
 source "$scrDir/globalcontrol.sh"
 
@@ -20,7 +20,7 @@ keyFile="${hydeConfDir}/key.kb"
 categoryFile="${hydeConfDir}/category.kb"
 dispatcherFile="${hydeConfDir}/dispatcher.kb"
 
-roDir="$confDir/rofi"
+roDir="$confDir/wofi"
 roconf="$roDir/clipboard.rasi"
 
 HELP() {
@@ -338,7 +338,7 @@ END {
 DISPLAY() { awk -v kb_hint_delim="${kb_hint_delim:->}" -F '!=!' '{if ($0 ~ /=/ && $6 != "") printf "%-25s %-2s %-30s\n", $5, kb_hint_delim, $6; else if ($0 ~ /=/) printf "%-25s\n", $5; else print $0}'; }
 
 #? Extra design use for distinction
-header="$(printf "%-35s %-1s %-20s\n" "󰌌 Keybinds" "󱧣" "Description")"
+header="$(printf "%-35s %-1s %-20s\n" "󰌌 Keybinds" "Description")"
 cols=$(tput cols)
 cols=${cols:-999}
 linebreak="$(printf '%.0s━' $(seq 1 "${cols}") "")"
@@ -355,22 +355,11 @@ output=$(echo -e "${header}\n${linebreak}\n${display}")
 [ "$kb_hint_pretty" = true ] && echo -e "$output" && exit 0
 
 #? will display on the terminal if rofi is not found or have -j flag
-if ! command -v rofi &>/dev/null; then
+if ! command -v wofi &>/dev/null; then
   echo "$output"
-  echo "rofi not detected. Displaying on terminal instead"
+  echo "wofi not detected. Displaying on terminal instead"
   exit 0
 fi
-
-#? Put rofi configuration here 
-# Read hypr theme border
-wind_border=$((hypr_border * 3 / 2))
-elem_border=$([ "$hypr_border" -eq 0 ] && echo "5" || echo "$hypr_border")
-
-# TODO Dynamic scaling for text and the window >>> I do not know if rofi is capable of this
-r_width="width: ${kb_hint_width:-35em};"
-r_height="height: ${kb_hint_height:-35em};"
-r_listview="listview { lines: ${kb_hint_line:-13}; }"
-r_override="window {$r_height $r_width border: ${hypr_width}px; border-radius: ${wind_border}px;} entry {border-radius: ${elem_border}px;} element {border-radius: ${elem_border}px;} ${r_listview} "
 
 # Read hypr font size
 fnt_override=$(gsettings get org.gnome.desktop.interface font-name | awk '{gsub(/'\''/,""); print $NF}')
@@ -381,8 +370,9 @@ icon_override=$(gsettings get org.gnome.desktop.interface icon-theme | sed "s/'/
 icon_override="configuration {icon-theme: \"${icon_override}\";}"
 
 #? Actions to do when selected
-selected=$(echo "$output" | rofi -dmenu -p -i -theme-str "${fnt_override}" -theme-str "${r_override}" -theme-str "${icon_override}" -config "${roconf}" | sed 's/.*\s*//')
+selected=$(echo "$output" | wofi --dmenu -n | sed 's/.*\s*//')
 if [ -z "$selected" ]; then exit 0; fi
+
 
 sel_1=$(awk -F "${kb_hint_delim:->}" '{print $1}' <<< "$selected" | awk '{$1=$1};1')
 sel_2=$(awk -F "${kb_hint_delim:->}" '{print $2}' <<< "$selected" | awk '{$1=$1};1')
@@ -390,29 +380,6 @@ run="$(grep "$sel_1" <<< "$metaData" | grep "$sel_2")"
 
 run_flg="$(echo "$run" | awk -F '!=!' '{print $8}')"
 run_sel="$(echo "$run" | awk -F '!=!' '{gsub(/^ *| *$/, "", $5); if ($5 ~ /[[:space:]]/ && $5 !~ /^[0-9]+$/ && substr($5, 1, 1) != "-") print $4, "\""$5"\""; else print $4, $5}')"
-#   echo "$run_sel" ; echo "$run_flg"
+echo "$run_sel" ; echo "$run_flg"
 
-#?
-RUN() { case "$(eval "hyprctl dispatch $run_sel")" in *"Not enough arguments"*) exec $0 ;; esac }
-
-#? If flag is repeat then repeat rofi if not then just execute once
-if [ -n "$run_sel" ] && [ "$(echo "$run_sel" | wc -l)" -eq 1 ]; then
-  eval "$run_flg"
-  if [ "$repeat" = true ]; then
-
-    while true; do
-      repeat_command=$(echo -e "Repeat" | rofi -dmenu -no-custom -p "[Enter] repeat; [ESC] exit") #? Needed a separate Rasi ? Dunno how to make; Maybe Something like confirmation rasi for buttons Yes and No then the -p will be the Question like Proceed? Repeat?
-
-      if [ "$repeat_command" = "Repeat" ]; then
-        # Repeat the command here
-        RUN
-      else
-        exit 0
-      fi
-    done
-  else
-    RUN
-  fi
-else
-  exec $0
-fi
+eval "$run_sel" ; eval "$run_flg"

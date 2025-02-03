@@ -49,6 +49,9 @@ generate_theme() {
     # Run wal to generate colors
     wal -i "$wallpaper" &
 
+    # Copy the wallpaper to ~/.cache/wal and ensure the file is called wallpaper
+    cp "$wallpaper" "$HOME/.cache/wal/wallpaper"
+
     # (Optional) Restart any applications that depend on the theme
     echo "Restarting swaync..."
     killall swaync

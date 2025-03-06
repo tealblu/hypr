@@ -52,6 +52,13 @@ generate_theme() {
     # Copy the wallpaper to ~/.cache/wal and ensure the file is called wallpaper
     cp "$wallpaper" "$HOME/.cache/wal/wallpaper"
 
+    # Output the wallpaper path to wal/wallpaper.txt
+    # Ensure to overwrite
+    echo "$wallpaper" > "$HOME/.cache/wal/wallpaper.txt"
+
+    # Call pywal-discord
+    pywal-discord -p /home/indigo/.config/vesktop/themes &
+
     # (Optional) Restart any applications that depend on the theme
     echo "Restarting swaync..."
     killall swaync

@@ -20,9 +20,6 @@ keyFile="${hydeConfDir}/key.kb"
 categoryFile="${hydeConfDir}/category.kb"
 dispatcherFile="${hydeConfDir}/dispatcher.kb"
 
-roDir="$confDir/wofi"
-roconf="$roDir/clipboard.rasi"
-
 HELP() {
   cat <<HELP
 Usage: $(basename "$0") [options]

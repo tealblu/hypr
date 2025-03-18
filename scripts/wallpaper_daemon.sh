@@ -1,206 +1,145 @@
 #!/bin/bash
-# wallpaper_daemon.sh - Monitors media players and switches wallpapers accordingly
+# wallpaper_menu.sh - Wofi menu for controlling the wallpaper daemon
 
-# Configuration
-SCRIPT_DIR="$HOME/.config/hypr/scripts"  # Hard-coded script directory
-CONFIG_DIR="$HOME/.config/wallpaper-daemon"
-ENABLED_FILE="$CONFIG_DIR/enabled"
-CACHE_DIR="$HOME/.cache/wal"
-CHECK_INTERVAL=5  # Check every 5 seconds
+# Paths to scripts
+DAEMON_SCRIPT="$HOME/.config/hypr/scripts/wallpaper_daemon.sh"
 
-# Script paths - using the fixed script directory
-RANDOM_WALLPAPER_SCRIPT="${SCRIPT_DIR}/random_wallpaper.sh"
-SPOTIFY_WALLPAPER_SCRIPT="${SCRIPT_DIR}/spotify_wallpaper.sh"
-APPLY_WALLPAPER_SCRIPT="${SCRIPT_DIR}/apply_wallpaper.sh"
-
-# Create necessary directories
-mkdir -p "$CONFIG_DIR"
-
-# Initialize enabled state if it doesn't exist
-if [[ ! -f "$ENABLED_FILE" ]]; then
-    echo "true" > "$ENABLED_FILE"
+# Check if required commands exist
+if ! command -v wofi &>/dev/null; then
+	notify-send "Wallpaper Menu" "wofi is not installed"
+	exit 1
 fi
 
-# Function to verify all scripts exist
-check_scripts() {
-    local missing=false
-    
-    if [[ ! -f "$RANDOM_WALLPAPER_SCRIPT" ]]; then
-        echo "Error: Random wallpaper script not found at $RANDOM_WALLPAPER_SCRIPT" >&2
-        missing=true
-    fi
-    
-    if [[ ! -f "$SPOTIFY_WALLPAPER_SCRIPT" ]]; then
-        echo "Error: Spotify wallpaper script not found at $SPOTIFY_WALLPAPER_SCRIPT" >&2
-        missing=true
-    fi
-    
-    if [[ ! -f "$APPLY_WALLPAPER_SCRIPT" ]]; then
-        echo "Error: Apply wallpaper script not found at $APPLY_WALLPAPER_SCRIPT" >&2
-        missing=true
-    fi
-    
-    if $missing; then
-        echo "Please ensure all required scripts are installed in $SCRIPT_DIR" >&2
-        return 1
-    fi
-    
-    # Make scripts executable
-    chmod +x "$RANDOM_WALLPAPER_SCRIPT" "$SPOTIFY_WALLPAPER_SCRIPT" "$APPLY_WALLPAPER_SCRIPT"
-    return 0
-}
-
-# Function to check if daemon is enabled
-is_enabled() {
-    if [[ "$(cat "$ENABLED_FILE")" == "true" ]]; then
-        return 0  # True
-    else
-        return 1  # False
-    fi
-}
-
-# Function to toggle daemon enabled/disabled
-toggle_daemon() {
-    if is_enabled; then
-        echo "false" > "$ENABLED_FILE"
-        echo "Wallpaper daemon disabled"
-    else
-        echo "true" > "$ENABLED_FILE"
-        echo "Wallpaper daemon enabled"
-    fi
-}
-
-# Function to check if Spotify is playing
-is_spotify_playing() {
-    if playerctl --player=spotify status 2>/dev/null | grep -q "Playing"; then
-        return 0  # True
-    else
-        return 1  # False
-    fi
-}
-
-# Function to get current track info
-get_current_track() {
-    playerctl --player=spotify metadata --format "{{artist}} - {{title}}" 2>/dev/null || echo ""
-}
-
-# Function to apply random wallpaper
-apply_random_wallpaper() {
-    if [ "$1" != "force" ] && ! $USING_SPOTIFY; then
-        return  # Already using random wallpaper, no need to change
-    fi
-    
-    echo "Switching to random wallpaper"
-    # Fallback to a direct wallpaper path if the script fails
-    if ! "$RANDOM_WALLPAPER_SCRIPT" | "$APPLY_WALLPAPER_SCRIPT"; then
-        if [ -d "$HOME/Pictures/bg" ]; then
-            find "$HOME/Pictures/bg" -type f | grep -E '\.(jpg|png|jpeg)$' | shuf -n 1 | "$APPLY_WALLPAPER_SCRIPT"
-        else
-            echo "Failed to apply random wallpaper and no fallback directory found" >&2
-        fi
-    fi
-    USING_SPOTIFY=false
-}
-
-# Function to apply Spotify wallpaper
-apply_spotify_wallpaper() {
-    echo "Switching to Spotify wallpaper"
-    if ! "$SPOTIFY_WALLPAPER_SCRIPT" | "$APPLY_WALLPAPER_SCRIPT"; then
-        echo "Failed to apply Spotify wallpaper, falling back to random" >&2
-        apply_random_wallpaper "force"
-        return
-    fi
-    USING_SPOTIFY=true
-}
-
-# Current state tracking
-LAST_TRACK=""
-USING_SPOTIFY=false
-
-# Parse command line arguments
-case "$1" in
-    toggle)
-        toggle_daemon
-        exit 0
-        ;;
-    status)
-        if is_enabled; then
-            echo "Wallpaper daemon is enabled"
-            echo "Using scripts:"
-            echo "  Random: $RANDOM_WALLPAPER_SCRIPT"
-            echo "  Spotify: $SPOTIFY_WALLPAPER_SCRIPT"
-            echo "  Apply: $APPLY_WALLPAPER_SCRIPT"
-        else
-            echo "Wallpaper daemon is disabled"
-        fi
-        exit 0
-        ;;
-    start)
-        echo "true" > "$ENABLED_FILE"
-        echo "Wallpaper daemon enabled"
-        ;;
-    stop)
-        echo "false" > "$ENABLED_FILE"
-        echo "Wallpaper daemon disabled"
-        ;;
-    spotify)
-        # Force switch to Spotify wallpaper
-        check_scripts && apply_spotify_wallpaper
-        exit 0
-        ;;
-    random)
-        # Force switch to random wallpaper
-        check_scripts && apply_random_wallpaper "force"
-        exit 0
-        ;;
-    setup)
-        echo "Setting up wallpaper daemon scripts..."
-        # Make all scripts executable
-        chmod +x "$RANDOM_WALLPAPER_SCRIPT" "$SPOTIFY_WALLPAPER_SCRIPT" "$APPLY_WALLPAPER_SCRIPT" "$SCRIPT_DIR/wallpaper_daemon.sh"
-        echo "Scripts are ready to use in $SCRIPT_DIR"
-        exit 0
-        ;;
-    *)
-        # Continue to main loop for daemon mode
-        ;;
-esac
-
-# Verify scripts exist before starting daemon
-if ! check_scripts; then
-    exit 1
+# Check if notification command exists
+NOTIFY_CMD="notify-send"
+if ! command -v $NOTIFY_CMD &>/dev/null; then
+	NOTIFY_CMD="echo"
 fi
 
-# Main loop
-echo "Starting wallpaper daemon..."
-# Apply initial random wallpaper
-apply_random_wallpaper "force"
+# Function to send notifications
+notify() {
+	$NOTIFY_CMD "Wallpaper Menu" "$1"
+}
 
-while true; do
-    # Check if daemon is enabled
-    if ! is_enabled; then
-        sleep "$CHECK_INTERVAL"
-        continue
-    fi
-    
-    # Check Spotify status
-    if is_spotify_playing; then
-        # Get current track
-        CURRENT_TRACK=$(get_current_track)
-        
-        # If track changed, update wallpaper
-        if [[ "$CURRENT_TRACK" != "$LAST_TRACK" ]]; then
-            echo "Track changed: $CURRENT_TRACK"
-            apply_spotify_wallpaper
-            LAST_TRACK="$CURRENT_TRACK"
-        fi
-    else
-        # If not playing and we were using Spotify wallpaper before, switch to random
-        if $USING_SPOTIFY; then
-            echo "Spotify stopped playing"
-            apply_random_wallpaper "force"
-            LAST_TRACK=""
-        fi
-    fi
-    
-    sleep "$CHECK_INTERVAL"
-done
+# Function to check daemon status
+is_daemon_enabled() {
+	if [ -f "$HOME/.config/wallpaper-daemon/enabled" ]; then
+		if [ "$(cat "$HOME/.config/wallpaper-daemon/enabled")" = "true" ]; then
+			return 0 # True
+		fi
+	fi
+	return 1 # False
+}
+
+# Function to check if daemon is running
+is_daemon_running() {
+	if [ -f "$HOME/.config/wallpaper-daemon/daemon.pid" ]; then
+		if ps -p "$(cat "$HOME/.config/wallpaper-daemon/daemon.pid")" &>/dev/null; then
+			return 0 # True
+		fi
+	fi
+	return 1 # False
+}
+
+# Function to get current mode
+get_current_mode() {
+	if [ -f "$HOME/.config/wallpaper-daemon/mode" ]; then
+		cat "$HOME/.config/wallpaper-daemon/mode"
+	else
+		echo "unknown"
+	fi
+}
+
+# Function to get current status text for menu
+get_status_text() {
+	if is_daemon_enabled && is_daemon_running; then
+		echo "● Disable Auto-Switching"
+	else
+		echo "○ Enable Auto-Switching"
+	fi
+}
+
+# Menu options
+gen_menu() {
+	local current_mode=$(get_current_mode)
+
+	if [ "$current_mode" = "spotify" ]; then
+		echo "🎵 Switch to Spotify Mode ✓"
+	else
+		echo "🎵 Switch to Spotify Mode"
+	fi
+
+	if [ "$current_mode" = "random" ]; then
+		echo "🖼️ Switch to Random Mode ✓"
+	else
+		echo "🖼️ Switch to Random Mode"
+	fi
+
+	echo "🔄 Refresh Current Wallpaper"
+	echo "$(get_status_text)"
+	echo "📋 Show Status"
+	echo "🔍 List Running Instances"
+	echo "🔄 Restart Daemon"
+}
+
+# Handle menu selection
+handle_selection() {
+	case "$1" in
+	*"Switch to Spotify Mode"*)
+		"$DAEMON_SCRIPT" spotify
+		notify "Switched to Spotify album art mode"
+		;;
+	*"Switch to Random Mode"*)
+		"$DAEMON_SCRIPT" random
+		notify "Switched to random wallpaper mode"
+		;;
+	"🔄 Refresh Current Wallpaper")
+		local current_mode=$(get_current_mode)
+		if [ "$current_mode" = "spotify" ] && playerctl --player=spotify status 2>/dev/null | grep -q "Playing"; then
+			"$DAEMON_SCRIPT" spotify
+			notify "Refreshed Spotify wallpaper"
+		else
+			"$DAEMON_SCRIPT" random
+			notify "Refreshed random wallpaper"
+		fi
+		;;
+	"● Disable Auto-Switching")
+		"$DAEMON_SCRIPT" stop
+		notify "Auto-switching disabled"
+		;;
+	"○ Enable Auto-Switching")
+		"$DAEMON_SCRIPT" start
+		notify "Auto-switching enabled"
+		;;
+	"📋 Show Status")
+		status=$("$DAEMON_SCRIPT" status)
+		notify "$status"
+		;;
+	"🔍 List Running Instances")
+		instances=$("$DAEMON_SCRIPT" list)
+		notify "$instances"
+		;;
+	"🔄 Restart Daemon")
+		"$DAEMON_SCRIPT" restart
+		notify "Daemon restarted"
+		;;
+	*)
+		notify "Unknown option: $1"
+		;;
+	esac
+}
+
+# Main execution
+main() {
+	pkill -x wofi || selection=$(gen_menu | wofi --show dmenu \
+		--no-actions \
+		--prompt "Wallpaper Menu" \
+		--width 500 \
+		--lines 8)
+
+	if [ -n "$selection" ]; then
+		handle_selection "$selection"
+	fi
+}
+
+main "$@"

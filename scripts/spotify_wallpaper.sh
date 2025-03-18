@@ -61,7 +61,7 @@ composite -gravity center \
 
 # Save the path to the created wallpaper
 echo "$SPOTIFY_DIR/background.png" >"$OUTPUT_PATH"
-# echo "$SPOTIFY_DIR/background.png" # Output for use in pipes or variable capture
+echo "$SPOTIFY_DIR/background.png" # Output for use in pipes or variable capture
 
 # Success message
 album_name=$(cat "$CURRENT_ALBUM")

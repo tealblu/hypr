@@ -31,6 +31,7 @@ EOF
 	# Restart hyprpaper
 	echo "Restarting hyprpaper..." >&2
 	killall hyprpaper 2>/dev/null || true
+	sleep 0.5
 	hyprctl dispatch exec hyprpaper
 
 	# Copy wallpaper to wal cache

@@ -38,7 +38,11 @@ apply_wallpaper() {
     
     # Generate pywal theme
     echo "Generating pywal theme..." >> "$LOG_FILE"
-    /sbin/wal -i "$wallpaper" >> "$LOG_FILE" 2>&1
+    /sbin/wal -i "$wallpaper" >> "$LOG_FILE" 2>&1 &
+
+    # Generate GTK theme
+    echo "Generating GTK theme..." >> "$LOG_FILE"
+    /usr/bin/wpg -s "$wallpaper" >> "$LOG_FILE" 2>&1
     
     # Apply to discord theme if pywal-discord is installed
     if command -v pywal-discord &>/dev/null; then

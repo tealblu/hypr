@@ -79,7 +79,7 @@ change_volume() {
             ;;
     esac
     
-    notify_vol
+    # notify_vol
 }
 
 toggle_mute() {
@@ -90,7 +90,7 @@ toggle_mute() {
         "pamixer") 
             $use_swayosd && swayosd-client "${mode}" mute-toggle && exit 0
             pamixer $srce -t
-            notify_mute
+            # notify_mute
             ;;
         "playerctl")
             local volume_file="/tmp/$(basename "$0")_last_volume_${srce:-all}"
@@ -105,7 +105,7 @@ toggle_mute() {
                     playerctl --player="$srce" volume 0.5  # Default to 50% if no saved volume
                 fi
             fi
-            notify_mute
+            # notify_mute
             ;;
     esac
 }

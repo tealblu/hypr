@@ -5,13 +5,13 @@
 #* Please inform us if there are new Categories upstream will try to add comments to this script
 #* Khing 🦆
 
-pkill -x wofi && exit
+pkill -x fuzzel && exit
 scrDir=$(dirname "$(realpath "$0")")
 source "$scrDir/globalcontrol.sh"
 
 confDir="${XDG_CONFIG_HOME:-$HOME/.config}"
 keyconfDir="$confDir/hypr"
-kb_hint_conf=("$keyconfDir/hyprland.conf" "$keyconfDir/keybindings.conf" "$keyconfDir/userprefs.conf" )
+kb_hint_conf=("$keyconfDir/hyprland.conf" "$keyconfDir/keybindings.conf" )
 tmpMapDir="/tmp"
 tmpMap="$tmpMapDir/hyde-keybinds.jq"
 keycodeFile="${hydeConfDir}/keycode.kb"
@@ -352,9 +352,9 @@ output=$(echo -e "${header}\n${linebreak}\n${display}")
 [ "$kb_hint_pretty" = true ] && echo -e "$output" && exit 0
 
 #? will display on the terminal if rofi is not found or have -j flag
-if ! command -v wofi &>/dev/null; then
+if ! command -v fuzzel &>/dev/null; then
   echo "$output"
-  echo "wofi not detected. Displaying on terminal instead"
+  echo "fuzzel not detected. Displaying on terminal instead"
   exit 0
 fi
 
@@ -367,7 +367,7 @@ icon_override=$(gsettings get org.gnome.desktop.interface icon-theme | sed "s/'/
 icon_override="configuration {icon-theme: \"${icon_override}\";}"
 
 #? Actions to do when selected
-selected=$(echo "$output" | wofi --dmenu -n | sed 's/.*\s*//')
+selected=$(echo "$output" | fuzzel --config=/home/indigo/.cache/wal/colors-fuzzel.ini --dmenu | sed 's/.*\s*//')
 if [ -z "$selected" ]; then exit 0; fi
 
 

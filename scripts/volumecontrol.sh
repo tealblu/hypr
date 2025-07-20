@@ -2,7 +2,6 @@
 
 # Source global control script
 scrDir=$(dirname "$(realpath "$0")")
-source "$scrDir/globalcontrol.sh"
 
 # Check if SwayOSD is installed
 use_swayosd=false

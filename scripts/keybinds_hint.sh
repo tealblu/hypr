@@ -7,7 +7,6 @@
 
 pkill -x fuzzel && exit
 scrDir=$(dirname "$(realpath "$0")")
-source "$scrDir/globalcontrol.sh"
 
 confDir="${XDG_CONFIG_HOME:-$HOME/.config}"
 keyconfDir="$confDir/hypr"
